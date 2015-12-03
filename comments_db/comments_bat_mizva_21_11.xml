@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<event>
+  <event_info>
+    <event_name>yossi_21_11</event_name>
+    <number_of_comments>0</number_of_comments>
+  </event_info>
+  <images>
+    <image name="11.jpg">
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>היי</comment_string>
+      </comment>
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>שלום לך ❤❤❤</comment_string>
+      </comment>
+    </image>
+    <image name="12.jpg">
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>טטטטצצצ ננטן</comment_string>
+      </comment>
+    </image>
+    <image name="13.jpg">
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>טעמחןחמ</comment_string>
+      </comment>
+    </image>
+    <image name="15.jpg">
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>&#x1f601;&#x1f601;&#x1f601;&#x1f601;&#x1f618;&#x1f618;&#x1f618;&#x1f618;</comment_string>
+      </comment>
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>היום יום הולדתתת</comment_string>
+      </comment>
+    </image>
+  </images>
+</event>

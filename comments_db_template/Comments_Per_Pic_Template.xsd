@@ -1,0 +1,37 @@
+<xs:schema attributeFormDefault="unqualified" elementFormDefault="qualified" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:element name="event">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="event_info">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element type="xs:string" name="event_name"/>
+              <xs:element type="xs:byte" name="number_of_comments"/>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+        <xs:element name="images">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="image" maxOccurs="unbounded" minOccurs="0">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element name="comment" maxOccurs="unbounded" minOccurs="0">
+                      <xs:complexType>
+                        <xs:sequence>
+                          <xs:element type="xs:byte" name="comment_id"/>
+                          <xs:element type="xs:string" name="comment_string"/>
+                        </xs:sequence>
+                      </xs:complexType>
+                    </xs:element>
+                  </xs:sequence>
+                  <xs:attribute type="xs:string" name="name" use="optional"/>
+                </xs:complexType>
+              </xs:element>
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>
