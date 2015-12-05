@@ -6,6 +6,7 @@ import java.util.List;
 import java.io.*; 
 
 import ClientToServer.AddNewCommentRequest;
+import ClientToServer.AdjustBrightness;
 import ClientToServer.ChangeModeRequest;
 import ClientToServer.ChangeModeRequest.Mode;
 import ClientToServer.DeleteCommentRequest;
@@ -15,13 +16,13 @@ import ClientToServer.ImageSwipeRequest.SwipeDirection;
 import javafx.application.Platform;
 import src.ledserver.LedFxManager;
 
-public class EchoServer implements Runnable
+public class ledServer implements Runnable
 { 
 	DatagramSocket serverSocket = null;
 	Socket clientSocket = null;
 	LedFxManager mgr = null;
 	int wait_for_scene_dur_in_mili;
-	 public EchoServer(int port,LedFxManager mgr, int wait_for_scene_dur_in_mili) {
+	 public ledServer(int port,LedFxManager mgr, int wait_for_scene_dur_in_mili) {
 		 this.mgr = mgr;
 		 this.wait_for_scene_dur_in_mili = wait_for_scene_dur_in_mili;
 	   }
@@ -169,6 +170,13 @@ public class EchoServer implements Runnable
         		String s = null;
     			
         		handleDeleteCommentForCurrentPic(req.screenId);            
+    		}
+        	
+        	//	Adjust brightness -  AdjustBrightness
+            else if(Message instanceof AdjustBrightness) {
+            	AdjustBrightness req = (AdjustBrightness) Message;
+        		
+            	mgr.setBrightnessLevel(req.screenId, req.brightnessLevel);
     		}
         		
         } catch (ClassNotFoundException | IOException e) {

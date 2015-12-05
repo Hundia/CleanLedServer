@@ -11,8 +11,12 @@
         <comment_string>היי</comment_string>
       </comment>
       <comment>
-        <comment_id>0</comment_id>
+        <comment_id>1</comment_id>
         <comment_string>שלום לך ❤❤❤</comment_string>
+      </comment>
+      <comment>
+        <comment_id>2</comment_id>
+        <comment_string>קאחקאחרטל 6ן</comment_string>
       </comment>
     </image>
     <image name="12.jpg">
@@ -33,8 +37,24 @@
         <comment_string>&#x1f601;&#x1f601;&#x1f601;&#x1f601;&#x1f618;&#x1f618;&#x1f618;&#x1f618;</comment_string>
       </comment>
       <comment>
-        <comment_id>0</comment_id>
+        <comment_id>1</comment_id>
         <comment_string>היום יום הולדתתת</comment_string>
+      </comment>
+    </image>
+    <image name="10.jpg">
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>החי</comment_string>
+      </comment>
+      <comment>
+        <comment_id>1</comment_id>
+        <comment_string>.אחגאחקאח</comment_string>
+      </comment>
+    </image>
+    <image name="306584_3272006732329_881599363_n.jpg">
+      <comment>
+        <comment_id>0</comment_id>
+        <comment_string>היי</comment_string>
       </comment>
     </image>
   </images>

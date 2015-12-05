@@ -1,6 +1,7 @@
 package src.ledserver.comments.db;
 
 import java.util.List;
+import java.util.Map;
 
 public interface ICommentsDbAPI {
 
@@ -44,4 +45,10 @@ public interface ICommentsDbAPI {
 	 * @return image list with comments
 	 */
 	List<ImageElement> getAllImages();
+	
+	/**
+	 * Gets existing Map of images for the given image name
+	 * @param name image name to get the comments for
+	 */
+	Map<Integer, String> getExistingComments(String name);
 }

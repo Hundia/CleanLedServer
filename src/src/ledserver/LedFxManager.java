@@ -1,49 +1,41 @@
 package src.ledserver;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
-import java.io.FilenameFilter;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 
-import javax.imageio.ImageIO;
-
 import org.apache.log4j.BasicConfigurator;
 import org.apache.log4j.Logger;
 
-import src.ledserver.comments.CommentsManager;
 import src.ledserver.comments.db.CommentsDb;
 import src.ledserver.comments.db.ICommentsDbAPI;
-import src.ledserver.udp.EchoServer;
-
-import com.sun.xml.internal.ws.dump.LoggingDumpTube.Position;
-
+import src.ledserver.udp.ledServer;
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.concurrent.Task;
 import javafx.event.EventHandler;
+import javafx.geometry.Insets;
 import javafx.geometry.NodeOrientation;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
+import javafx.scene.Parent;
 import javafx.scene.Scene;
-import javafx.stage.Modality;
-import javafx.stage.Popup;
 import javafx.stage.Stage;
 import javafx.stage.StageStyle;
+import javafx.scene.control.Label;
+import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
-import javafx.scene.control.TextField;
-import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Circle;
-import javafx.scene.text.Text;
 
 /**
  * A sample showing use of a Service to retrieve data in a background thread.
@@ -58,16 +50,14 @@ import javafx.scene.text.Text;
  */
 public class LedFxManager extends Application {
 
+    private IntegerProperty brightness = new SimpleIntegerProperty();
 	Logger logger = Logger.getLogger(LedFxManager.class);
 	private static final int LONG_SLEEP_TOASTED = 8000;
 	private static final int SHORT_SLEEP_DIDNT_TOAST = 1000;
 	private static final int NUMBER_OF_SCREENS = 1;
-	EchoServer server = null;
+	ledServer server = null;
 	private Scene scene;
-    private ArrayList<Object> imgList = new ArrayList<Object>();
-	private int index = 0;
-	private ArrayList<imageListContainer> imageArray = new ArrayList<>();
-    private Stage dialog;
+	private ArrayList<imageListContainer> screensList = new ArrayList<>();
     private HBox box;
     private int stripWidth;
     private int	stripHeight;
@@ -76,6 +66,9 @@ public class LedFxManager extends Application {
     private int toastYpos;
     private int fontSize;
     Stage primary;
+    
+    //	Used to access the comments database of the system statically Via
+    //	a single API.
     public static ICommentsDbAPI CommentsDb = new CommentsDb();
     
     @Override public void start(Stage primaryStage) throws Exception {
@@ -89,9 +82,6 @@ public class LedFxManager extends Application {
         final List<String> parameters = params.getRaw();
         System.out.println(parameters);
         
-    	//	Init the comments DB, expected to receive the XML and its Scheme
-        CommentsDb.init(parameters.get(12));
-    	
         primary = primaryStage;
         int wait_for_scene_dur_in_mili = Integer.valueOf(parameters.get(4));
         stripWidth = Integer.valueOf(parameters.get(5));
@@ -109,16 +99,29 @@ public class LedFxManager extends Application {
         StackPane.setAlignment( img, Pos.TOP_RIGHT );
         sPane.getChildren().addAll(box);
 
+        //	Init the comments DB, expected to receive the XML and its Scheme
+        CommentsDb.init(parameters.get(12));
+        
 		for (int i = 0; i < NUMBER_OF_SCREENS; i++) {
 			imageListContainer tmp = new imageListContainer(stripWidth,stripHeight);
 			tmp.init(parameters.get(0), parameters.get(1), parameters.get(2));
-			imageArray.add(tmp);
-			box.getChildren().add(imageArray.get(i).rootLayout);
+			
+			//	Add the container for the screens list
+			screensList.add(tmp);
+			box.getChildren().add(screensList.get(i).rootLayout);
 		}
         
+		
+		//	Set brightness control
+		Parent prnt = sPane;
+	    final DoubleBinding colorValue = brightness.multiply(2.55);
+        StringExpression styleString = Bindings.format("-fx-base:rgb(%1$.0f , %1$.0f, %1$.0f)", colorValue);
+        brightness.set(0);
+        prnt.styleProperty().bind(styleString);
+                
 		// Show the scene containing the root layout.
 //		scene = new Scene(box);
-		scene = new Scene(sPane);
+		scene = new Scene(prnt);
 		primaryStage.setScene(scene);
 		primaryStage.initStyle(StageStyle.UNDECORATED);
 //		primaryStage.setX(1280);
@@ -130,6 +133,8 @@ public class LedFxManager extends Application {
 		primaryStage.setWidth(stripWidth);
         primaryStage.show();
         
+        //initBrightnessControl(primaryStage);
+        
         scene.addEventFilter(MouseEvent.MOUSE_PRESSED, new EventHandler<MouseEvent>() {
             @Override
             public void handle(MouseEvent mouseEvent) {
@@ -137,10 +142,9 @@ public class LedFxManager extends Application {
             	}
         });
         
-	    server = new EchoServer(10007,this,wait_for_scene_dur_in_mili);
+	    server = new ledServer(10007,this,wait_for_scene_dur_in_mili);
 	    Thread t = new Thread(server);
 	    t.start();
-	    	
 
 	    Task<Integer> task = new Task<Integer>() {
 	        @Override protected Integer call() throws Exception {
@@ -157,7 +161,7 @@ public class LedFxManager extends Application {
 						Platform.runLater(new Runnable() {
 						    @Override
 						    public void run() {
-					    		String comment = imageArray.get(0).getCommentForDisplay();
+					    		String comment = screensList.get(0).getCommentForDisplay();
 					    		if(null != comment)
 					    		{
 							    	Toast toast = new Toast();
@@ -187,15 +191,42 @@ public class LedFxManager extends Application {
 	
 	    new Thread(task).start();
 
+	    
     }
     
+    private void initBrightnessControl(Stage primaryStage) {
+
+        Label label = new Label();
+        label.textProperty().bind(Bindings.format("Brightness: %1$2d %%", brightness));
+
+        Slider slider = new Slider();
+        slider.setMin(0);
+        slider.setMax(100);
+        slider.valueProperty().bindBidirectional(brightness);
+
+        VBox root = new VBox();
+        root.setSpacing(10);
+        root.setPadding(new Insets(10));
+        root.getChildren().addAll(label, slider);
+
+        Stage stage = new Stage();
+        stage.setScene(new Scene(root));
+        stage.initOwner(primaryStage);
+
+        stage.show();
+    }
+	public void setBrightnessLevel(int screen, int level) {
+		logger.info("Received request to adjust brightness level to: " + level 
+				+ " from: " + brightness.get());
+		screensList.get(screen).setImageBrightness(level);
+	}
+	
     public static void main(String[] args) { 
     		Application.launch(args); 
     	}
 
 	public void SwipeRight(int index) {
-		imageArray.get(index).SwipeRight();
-		
+		screensList.get(index).SwipeRight();
 	}
 
 	/**
@@ -204,22 +235,22 @@ public class LedFxManager extends Application {
 	 * @param newMode
 	 */
 	public void replaceDisplayMode(int screen,int newMode) {
-		imageArray.get(screen).replaceDisplayMode(newMode);
+		screensList.get(screen).replaceDisplayMode(newMode);
 	}
 	
 	public void SwipeLeft(int screen) {
-		imageArray.get(screen).SwipeLeft();
+		screensList.get(screen).SwipeLeft();
 		
 	}
 
 	public void handleAddComment2Pic(int screen, String comment) {
 
-		imageArray.get(screen).addTextToCurrentPic(comment);
+		screensList.get(screen).addTextToCurrentPic(comment);
 		
 	}
 
 	public void handleDeleteCommentForCurrentPic(int screen) {
-		imageArray.get(screen).removeCommentsForActivePic();
+		screensList.get(screen).removeCommentsForActivePic();
 		
 	}
 }

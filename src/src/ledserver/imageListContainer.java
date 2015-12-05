@@ -4,13 +4,25 @@ import java.io.File;
 import java.io.FilenameFilter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.Map;
 
+import org.apache.log4j.Logger;
+
+import src.ledserver.MediaContainer.MediaType;
 import src.ledserver.comments.CommentsManager;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.IntegerProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.geometry.Pos;
+import javafx.scene.effect.ColorAdjust;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 import javafx.scene.layout.AnchorPane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.media.Media;
 import javafx.scene.media.MediaPlayer;
 import javafx.scene.media.MediaView;
@@ -18,7 +30,7 @@ import javafx.scene.media.MediaView;
 public class imageListContainer {
 
     public ArrayList<MediaContainer> imgListForBack = new ArrayList<MediaContainer>();
-    public ArrayList<MediaContainer> imgListForTakingPictures = new ArrayList<MediaContainer>();
+    public ArrayList<MediaContainer> imgListForAlbum = new ArrayList<MediaContainer>();
     public ArrayList<MediaContainer> imgListForScenematic = new ArrayList<MediaContainer>();
     public HashMap<MediaContainer,CommentsManager> commentsForMedia = new HashMap<MediaContainer,CommentsManager>();
     public ArrayList<MediaContainer> activeList = null;
@@ -29,7 +41,8 @@ public class imageListContainer {
 	int stripWidth = 800; 
 	int stripHeight = 600;
 	private int currentMode = 2; // 2 == scenematic
-	
+	Logger logger = Logger.getLogger(imageListContainer.class);
+
 	public imageListContainer(int stripWidth, int stripHeight) {
 		this.stripWidth = stripWidth;
 		this.stripHeight = stripHeight;
@@ -37,7 +50,7 @@ public class imageListContainer {
 
 	public void init(String backImgDir, String takingPicImgDir, String scenematicDir) {
 		loadListOfImageFiles(backImgDir,imgListForBack);
-		loadListOfImageFiles(takingPicImgDir,imgListForTakingPictures);
+		loadListOfImageFiles(takingPicImgDir,imgListForAlbum);
 		loadListOfImageFiles(scenematicDir,imgListForScenematic);
 		
     	// Load root layout from fxml file.
@@ -58,6 +71,8 @@ public class imageListContainer {
 		((MediaContainer)activeList.get(0)).mediaPlayer.play();
 		rootLayout.getChildren().add(mainMedia);
 	}
+	
+
 	
     public void UpdateIndexPosition(boolean swipeLeft) {
     	if(swipeLeft) {
@@ -242,16 +257,24 @@ public class imageListContainer {
 //	   	        mediaPlayer.setFitHeight(stripHeight);
 	   	        mc.mediaPlayer.setMute(true);
 	   	        imgList.add(mc);
+	   	        
 	   	        commentsForMedia.put(mc,new CommentsManager(f.getName()));
-
+	   	        
+	   	        //	Get comments for media
+	   	        getCommentsForMedia(f, mc);
 	         }
 	         else {
 	        	 MediaContainer mc = new MediaContainer(MediaContainer.MediaType.IMAGE, new Image(f.toURI().toString()));
 	             // you probably want something more involved here
 	             // to display in your UI
 	   	         System.out.println("image: " + f.getName());
+	   	        
 	   	         imgList.add(mc);
 	   	         commentsForMedia.put(mc,new CommentsManager(f.getName()));
+	   	        
+	   	         //	Get comments for media
+	   	         getCommentsForMedia(f, mc);
+	   	         
 	   	         System.out.println(" width : " + mc.image.getWidth());
 	             System.out.println(" height: " + mc.image.getHeight());
 	             System.out.println(" size  : " + f.length());
@@ -263,6 +286,29 @@ public class imageListContainer {
 	return true;
     }
 
+	private void getCommentsForMedia(final File f, MediaContainer mc) {
+		//	Get the existing comments from the DB
+		 Map<Integer,String> commentMap = LedFxManager.CommentsDb.getExistingComments(f.getName());
+		 
+		 if(null != commentMap) {
+			 //	Get an iterator for the map result
+			 Iterator it = commentMap.entrySet().iterator();
+			 while (it.hasNext()) {
+				 Map.Entry<Integer,String> pair = (Map.Entry<Integer,String>)it.next();
+				 if(commentsForMedia == null || mc == null) {
+					 System.out.println("Here..!");
+				 }
+				 else if(pair == null || commentsForMedia.get(mc) == null) {
+					 System.out.println("Here 2..!");
+				 }
+				 commentsForMedia.get(mc).loadCommentFromDb(pair.getValue(),pair.getKey());
+			 }
+			 
+			 //	Finalize the loading with this call..!
+			 commentsForMedia.get(mc).doneLoadingFromDb();
+		 }
+	}
+
     /**
      * Modes: 0 = back, 1 = pic, 2 = play scenematic
      * @param newMode
@@ -272,7 +318,7 @@ public class imageListContainer {
 			switch (newMode) {
 				case 0: activeList = imgListForBack;
 					break;
-				case 1: activeList = imgListForTakingPictures;
+				case 1: activeList = imgListForAlbum;
 					break;
 				case 2: activeList = imgListForScenematic;
 					break;
@@ -289,7 +335,7 @@ public class imageListContainer {
 	}
 	
 	public String getCommentForDisplay() {
-		if(activeList != imgListForTakingPictures) 
+		if(activeList != imgListForAlbum) 
 			return null;
 		String comment = commentsForMedia.get(activeList.get(index)).getNextComment();
 		System.out.println("Getting string for display: " + comment);
@@ -297,8 +343,17 @@ public class imageListContainer {
 	}
 
 	public void removeCommentsForActivePic() {
-		if(activeList != imgListForTakingPictures) 
+		if(activeList != imgListForAlbum) 
 			return;
 		//commentsForMedia.get(activeList.get(index)).clearAllComments();
+	}
+
+	public void setImageBrightness(int level) {
+		 ColorAdjust colorAdjust = new ColorAdjust();
+		 float floatedLevel = (float) ((float)level*(float)0.01);
+		 floatedLevel = -floatedLevel;
+		 colorAdjust.setBrightness(floatedLevel);
+		 logger.info("Requested to change brightness to: " + floatedLevel);
+		 mainImage.setEffect(colorAdjust);
 	}
 }

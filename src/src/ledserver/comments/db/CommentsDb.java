@@ -7,7 +7,9 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import javax.xml.XMLConstants;
 import javax.xml.transform.OutputKeys;
@@ -354,6 +356,23 @@ public class CommentsDb implements ICommentsDbAPI {
 				System.out.println("Comment ID: " + lst.get(i).commentList.get(j).commentId + " Comment: " + lst.get(i).commentList.get(j).commentText);
 			}
 		}
+	}
+
+	@Override
+	public Map<Integer,String> getExistingComments(String name) {
+		Map<Integer,String> mapOfExistingComments = new HashMap<Integer,String>();
+		List<Comment> lst = getCommentsForImage(name);
+		//	If the media has any comments..
+		if(null != lst) {
+			for(int i=0; i < lst.size(); i++) {
+				mapOfExistingComments.put(lst.get(i).commentId, lst.get(i).commentText);
+			}
+			
+			return mapOfExistingComments;	
+		}
+		
+		return null;
+		
 	}
 
 
