@@ -4,7 +4,7 @@ Eli Hundia (Eli.Hundia@gmail.com), in coorporation with CleanLed LTD Led screens
 
 The Project
 ------------
-The project was developed as part of a partnership with CleanLed Company to develop an entertainemnt system for a variaty of events.
+The project was developed as part of a partnership with CleanLed Company to develop an entertainment system for a variety of events.
 Due to an increasing demand to take pictures at the enterance of events, i developed a software that integrated with an array of LED Screens to allow using an android based client and a JavaFX Based server to select the background they wish to take a picture with and also leave a comment that will appear in a cyclic manner with other comments.
 Also, when idle, the system knows how to play a video for entertainment.
 
